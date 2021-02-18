@@ -21,7 +21,7 @@ CTrade trade;
 #define SELECT_BY_TICKET 1;
 
 //+------------------------------------------------------------------+
-//| Risk Management                                                  |
+//| Risk Management & Trailing SL                                    |
 //+------------------------------------------------------------------+
 //--- Expresar en base 1. Necesario para <optimalLotSize.mqh>
 input double RiesgoPorOperacion = 0.02;
@@ -30,12 +30,16 @@ input double spreadMaximo = 3.00; //--- Expresado en Pips
 
 //--- Pasar de Pips a Points teniendo en cuenta los digitos del activo
 double UnificarDigitos = MathPow(10,_Digits-1);
-//--- SL
+//--- SL & Trailing SL
 input double input_SL_pips = 25;
 double sl_points = input_SL_pips/UnificarDigitos;
+input double step = 0;
+input double pointsFromPriceBuy = 0.001;
+input double pointsFromPriceSell = 0.001;
 //--- TP
-input double input_TP_pips = 50;
-double tp_points = input_TP_pips/UnificarDigitos;
+input double riskRewardRatio = 2;
+double TP_pips = riskRewardRatio * input_SL_pips;
+double tp_points = TP_pips/UnificarDigitos;
 
 //+------------------------------------------------------------------+
 //| Definicion SMAs & ADX                                            |
@@ -159,14 +163,16 @@ void OnTick()
          ArraySetAsSeries(ADX_Array, true);
          CopyBuffer(ADX, 0, 0, 3, ADX_Array);
 
-         //--- Valor del ADX en la vela actual
-         double Valor_ADX = NormalizeDouble(ADX_Array[0],2);
+         //--- Valor del ADX según su índice, normalizado a dos dígitos
+         double Valor_ADX_0 = NormalizeDouble(ADX_Array[0],2);
+         double Valor_ADX_1 = NormalizeDouble(ADX_Array[1],2);
+         double Valor_ADX_2 = NormalizeDouble(ADX_Array[2],2);
 
          //+------------------------------------------------------------------+
          //| Lógica para determinar entradas                                  |
          //+------------------------------------------------------------------+
 
-         if(((((SMA_Array_A[0]<SMA_Array_B[0]) && (SMA_Array_C[0]<SMA_Array_A[0])) && ((SMA_Array_A[1]>SMA_Array_B[1]) && (SMA_Array_C[1]<SMA_Array_B[1])))) && (Valor_ADX > Valor_ADX_Necesario))   //--- SELL
+         if(((((SMA_Array_A[0]<SMA_Array_B[0]) && (SMA_Array_C[0]<SMA_Array_A[0])) && ((SMA_Array_A[1]>SMA_Array_B[1]) && (SMA_Array_C[1]<SMA_Array_B[1])))) && (Valor_ADX_0 > Valor_ADX_Necesario) && ( Valor_ADX_0 > Valor_ADX_1 > Valor_ADX_2 ))   //--- SELL
            {
 
             //--- Definiciones necesarias para Comprobar Spread
@@ -214,7 +220,7 @@ void OnTick()
            }
 
          else
-            if((((SMA_Array_A[0]>SMA_Array_B[0]) && (SMA_Array_C[0]>SMA_Array_A[0])) && ((SMA_Array_A[1]<SMA_Array_B[1]) && (SMA_Array_C[1]>SMA_Array_B[1]))) && (Valor_ADX > Valor_ADX_Necesario))//--- COMPRA
+            if((((SMA_Array_A[0]>SMA_Array_B[0]) && (SMA_Array_C[0]>SMA_Array_A[0])) && ((SMA_Array_A[1]<SMA_Array_B[1]) && (SMA_Array_C[1]>SMA_Array_B[1]))) && (Valor_ADX_0 > Valor_ADX_Necesario) && ( Valor_ADX_0 > Valor_ADX_1 > Valor_ADX_2 ))//--- COMPRA
               {
             //--- Definiciones necesarias para Comprobar Spread
             double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK),_Digits);
@@ -279,9 +285,8 @@ void OnTick()
          double Bid = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_BID),_Digits);
          double Spread = (Ask-Bid);
 
-         double step = 0; //--- Step
-         double slBuy  = NormalizeDouble(Ask-0.001,_Digits); //--- SL Buy
-         double slSell = NormalizeDouble(Bid+0.001,_Digits); //--- SL Sell
+         double slBuy  = NormalizeDouble(Ask-pointsFromPriceBuy,_Digits); //--- SL Buy
+         double slSell = NormalizeDouble(Bid+pointsFromPriceSell,_Digits); //--- SL Sell
          double positionPriceOpen = NormalizeDouble(PositionGetDouble(POSITION_PRICE_OPEN),_Digits);; //--- Precio de entrada de la posición
          double positionSL = NormalizeDouble(PositionGetDouble(POSITION_SL),_Digits); //--- SL en mercado de la posición
 
