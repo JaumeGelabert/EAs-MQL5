@@ -34,8 +34,10 @@ double UnificarDigitos = MathPow(10,_Digits-1);
 input double input_SL_pips = 25;
 double sl_points = input_SL_pips/UnificarDigitos;
 input double step = 0;
-input double pointsFromPriceBuy = 0.001;
-input double pointsFromPriceSell = 0.001;
+input double pipsFromPriceBuy = 0.001;
+input double pipsFromPriceSell = 0.001;
+double pointsFromPriceBuy = pipsFromPriceBuy/UnificarDigitos;
+double pointsFromPriceSell = pipsFromPriceSell/UnificarDigitos;
 //--- TP
 input double riskRewardRatio = 2;
 double TP_pips = riskRewardRatio * input_SL_pips;
@@ -172,7 +174,7 @@ void OnTick()
          //| Lógica para determinar entradas                                  |
          //+------------------------------------------------------------------+
 
-         if(((((SMA_Array_A[0]<SMA_Array_B[0]) && (SMA_Array_C[0]<SMA_Array_A[0])) && ((SMA_Array_A[1]>SMA_Array_B[1]) && (SMA_Array_C[1]<SMA_Array_B[1])))) && (Valor_ADX_0 > Valor_ADX_Necesario) && ( Valor_ADX_0 > Valor_ADX_1 > Valor_ADX_2 ))   //--- SELL
+         if(((((SMA_Array_A[0]<SMA_Array_B[0]) && (SMA_Array_C[0]<SMA_Array_A[0])) && ((SMA_Array_A[1]>SMA_Array_B[1]) && (SMA_Array_C[1]<SMA_Array_B[1])))) && (Valor_ADX_0 > Valor_ADX_Necesario))   //--- SELL
            {
 
             //--- Definiciones necesarias para Comprobar Spread
@@ -220,7 +222,7 @@ void OnTick()
            }
 
          else
-            if((((SMA_Array_A[0]>SMA_Array_B[0]) && (SMA_Array_C[0]>SMA_Array_A[0])) && ((SMA_Array_A[1]<SMA_Array_B[1]) && (SMA_Array_C[1]>SMA_Array_B[1]))) && (Valor_ADX_0 > Valor_ADX_Necesario) && ( Valor_ADX_0 > Valor_ADX_1 > Valor_ADX_2 ))//--- COMPRA
+            if((((SMA_Array_A[0]>SMA_Array_B[0]) && (SMA_Array_C[0]>SMA_Array_A[0])) && ((SMA_Array_A[1]<SMA_Array_B[1]) && (SMA_Array_C[1]>SMA_Array_B[1]))) && (Valor_ADX_0 > Valor_ADX_Necesario))//--- COMPRA
               {
             //--- Definiciones necesarias para Comprobar Spread
             double Ask = NormalizeDouble(SymbolInfoDouble(_Symbol, SYMBOL_ASK),_Digits);
